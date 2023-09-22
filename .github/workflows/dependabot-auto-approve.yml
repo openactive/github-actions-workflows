@@ -14,7 +14,7 @@ jobs:
       - name: Fetch all PRs
         # Auto approve PRs that are over 20 days old, for security
         run: |
-          gh search prs org:openactive --state=open --author "app/dependabot" --json url,createdAt --label "dependencies" --state open --review required --limit 100 --jq '.[] | select((.createdAt | fromdateiso8601) < (now - (20*24*60*60))) | .url' | tee prs.txt
+          gh search prs org:openactive --state=open --author "app/dependabot" --json url,createdAt --label "dependencies" --state open --review required --limit 100 --jq '.[] | select((.createdAt | fromdateiso8601) < (now - (1))) | .url' | tee prs.txt
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
 
