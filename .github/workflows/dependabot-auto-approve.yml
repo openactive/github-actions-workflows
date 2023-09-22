@@ -22,8 +22,10 @@ jobs:
         run: |
           while IFS= read -r pr
           do
-            echo "Approving PR $pr ..."
-            gh pr review --approve $pr
+            echo "Approving and enabling auto-merge for PR $pr ..."
+            gh pr review --approve "$pr"
+            gh pr merge "$pr" --auto --body "" --squash
           done < prs.txt
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
+
