@@ -1,0 +1,32 @@
+name: Auto-approve dependabot PRs
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Runs every 5 minutes
+
+permissions:
+  pull-requests: write
+
+jobs:
+  approve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch all PRs
+        id: prs
+        # Auto approve PRs that are 20 days old, for security
+        run: |
+          prs=$(gh search prs org:openactive --state=open --author "app/dependabot" --json url,createdAt --label "dependencies" --state open --jq '.[] | select((.createdAt | fromdateiso8601) < (now - (20*24*60*60))) | .url')
+          echo "prs=$prs" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve PRs
+        if: steps.prs.outputs.prs != ''
+        run: |
+          for pr in ${{ steps.prs.outputs.prs }}
+          do
+            echo "Approving PR $pr ..."
+            gh pr review --approve $pr
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
