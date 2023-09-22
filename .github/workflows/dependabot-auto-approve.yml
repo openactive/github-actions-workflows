@@ -12,21 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Fetch all PRs
-        id: prs
         # Auto approve PRs that are 20 days old, for security
         run: |
-          prs=$(gh search prs org:openactive --state=open --author "app/dependabot" --json url,createdAt --label "dependencies" --state open --jq '.[] | select((.createdAt | fromdateiso8601) < (now - (20*24*60*60))) | .url')
-          echo "prs=$prs" >> $GITHUB_OUTPUT
+          gh search prs org:openactive --state=open --author "app/dependabot" --json url,createdAt --label "dependencies" --state open --jq '.[] | select((.createdAt | fromdateiso8601) < (now - (20*24*60*60))) | .url' | tee prs.txt
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
 
       - name: Approve PRs
-        if: steps.prs.outputs.prs != ''
         run: |
-          for pr in ${{ steps.prs.outputs.prs }}
+          while IFS= read -r pr
           do
             echo "Approving PR $pr ..."
             gh pr review --approve $pr
-          done
+          done < prs.txt
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
