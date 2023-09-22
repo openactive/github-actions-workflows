@@ -18,7 +18,7 @@ jobs:
           prs=$(gh search prs org:openactive --state=open --author "app/dependabot" --json url,createdAt --label "dependencies" --state open --jq '.[] | select((.createdAt | fromdateiso8601) < (now - (20*24*60*60))) | .url')
           echo "prs=$prs" >> $GITHUB_OUTPUT
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
 
       - name: Approve PRs
         if: steps.prs.outputs.prs != ''
@@ -29,4 +29,4 @@ jobs:
             gh pr review --approve $pr
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
