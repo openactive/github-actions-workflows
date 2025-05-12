@@ -11,12 +11,19 @@ jobs:
   approve:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
       - name: Fetch all PRs
         # Auto approve PRs that are over 20 days old, for security
         run: |
           gh search prs org:openactive --state=open --author "app/dependabot" --json url,createdAt --label "dependencies" --state open --review required --limit 100 --jq '.[] | select((.createdAt | fromdateiso8601) < (now - (20*24*60*60))) | .url' | tee prs.txt
         env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Approve and enable auto-merge for PRs
         run: |
@@ -27,5 +34,4 @@ jobs:
             gh pr merge "$pr" --auto --body "" --squash
           done < prs.txt
         env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
-
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
